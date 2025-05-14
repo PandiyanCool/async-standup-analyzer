@@ -49,38 +49,36 @@ export async function POST(request: Request) {
             messages: [
                 {
                     role: "system",
-                    content: `You are an AI assistant specialized in analyzing standup meeting transcripts. Your role is to extract and structure information in JSON format.
+                    content: `You are an AI assistant specialized in analyzing standup meeting transcripts. Your role is to extract key information and provide sentiment analysis. Return your analysis in the following JSON format:
 
-Please analyze the transcript and return a JSON object with the following structure:
 {
-    "yesterday": [
-        "Item 1 completed yesterday",
-        "Item 2 completed yesterday"
-    ],
-    "today": [
-        "Item 1 planned for today",
-        "Item 2 planned for today"
-    ],
-    "blockers": [
-        "Blocker 1 description",
-        "Blocker 2 description"
-    ],
-    "keywords": [
-        {
-            "text": "Key term or topic",
-            "value": 5  // Number of mentions
-        }
-    ]
+  "yesterday": ["item1", "item2", ...],
+  "today": ["item1", "item2", ...],
+  "blockers": ["blocker1", "blocker2", ...],
+  "keywords": [
+    {"text": "keyword1", "value": 1},
+    {"text": "keyword2", "value": 2},
+    ...
+  ],
+  "sentiment": {
+    "overall": "positive" | "neutral" | "negative",
+    "score": number, // -1 to 1
+    "highlights": {
+      "positive": ["highlight1", "highlight2", ...],
+      "negative": ["concern1", "concern2", ...]
+    }
+  }
 }
 
 Guidelines:
-1. If a section has no items, return an empty array
-2. Include all relevant information from the transcript
-3. Keep items concise but descriptive
-4. Highlight urgent items and blockers
-5. Maintain a professional tone
-6. Ensure the output is valid JSON
-7. For keywords, count the frequency of important terms mentioned in the transcript`
+1. Extract completed tasks, planned tasks, and blockers
+2. Identify key topics and their frequency
+3. Analyze sentiment:
+   - Determine overall sentiment (positive/neutral/negative)
+   - Calculate sentiment score (-1 to 1)
+   - List positive highlights and concerns
+4. Keep items concise and actionable
+5. Ensure all arrays are properly populated, even if empty`
                 },
                 {
                     role: "user",
