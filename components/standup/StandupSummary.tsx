@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2Icon, XCircleIcon, ClockIcon, CopyIcon, SlackIcon } from "lucide-react";
+import {
+  CheckCircle2Icon,
+  XCircleIcon,
+  ClockIcon,
+  CopyIcon,
+  SlackIcon,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { StandupData } from "@/lib/types";
 import { formatStandupForSlack } from "@/lib/slack";
@@ -19,39 +25,44 @@ export default function StandupSummary({ data }: StandupSummaryProps) {
   const copyToClipboard = () => {
     const text = `
 🔹 What I did yesterday:
-${data.yesterday.map(item => `- ${item}`).join('\n')}
+${data.yesterday.map((item) => `- ${item}`).join("\n")}
 
 🔹 What I'm doing today:
-${data.today.map(item => `- ${item}`).join('\n')}
+${data.today.map((item) => `- ${item}`).join("\n")}
 
 🔹 Blockers:
-${data.blockers.length > 0 
-  ? data.blockers.map(item => `- ${item}`).join('\n')
-  : '- No blockers'}
+${
+  data.blockers.length > 0
+    ? data.blockers.map((item) => `- ${item}`).join("\n")
+    : "- No blockers"
+}
     `.trim();
 
-    navigator.clipboard.writeText(text).then(() => {
-      toast({
-        title: "Copied to clipboard",
-        description: "Your standup summary has been copied to clipboard.",
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        toast({
+          title: "Copied to clipboard",
+          description: "Your standup summary has been copied to clipboard.",
+        });
+      })
+      .catch((err) => {
+        console.error("Failed to copy: ", err);
+        toast({
+          title: "Copy failed",
+          description: "Failed to copy to clipboard. Please try again.",
+          variant: "destructive",
+        });
       });
-    }).catch(err => {
-      console.error('Failed to copy: ', err);
-      toast({
-        title: "Copy failed",
-        description: "Failed to copy to clipboard. Please try again.",
-        variant: "destructive",
-      });
-    });
   };
 
   const sendToSlack = async () => {
     setSlackLoading(true);
-    
+
     try {
       // Simulate sending to Slack
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       toast({
         title: "Sent to Slack",
         description: "Your standup summary has been sent to Slack.",
@@ -95,7 +106,7 @@ ${data.blockers.length > 0
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <ClockIcon className="h-5 w-5 text-blue-500" />
-            What I'm doing today
+            What I&apos;m doing today
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -132,7 +143,9 @@ ${data.blockers.length > 0
               ))}
             </ul>
           ) : (
-            <p className="text-muted-foreground italic">No blockers reported.</p>
+            <p className="text-muted-foreground italic">
+              No blockers reported.
+            </p>
           )}
         </CardContent>
       </Card>

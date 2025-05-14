@@ -1,59 +1,53 @@
-import { Configuration, OpenAIApi } from "openai";
-import { StandupData } from "../types";
+import { AzureOpenAI } from "openai";
 
-export async function analyzeTranscript(
-  transcript: string
-): Promise<StandupData> {
-  try {
-    const configuration = new Configuration({
-      apiKey: process.env.AZURE_OPENAI_KEY,
-      basePath: `${process.env.AZURE_OPENAI_ENDPOINT}/openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT}`,
-    });
+let client: AzureOpenAI | null = null;
 
-    const openai = new OpenAIApi(configuration);
+export const initializeOpenAIClient = (
+  endpoint: string,
+  apiKey: string,
+  apiVersion = "2024-02-15-preview"
+): void => {
+  console.log('Initializing OpenAI client with:', {
+    endpoint,
+    apiKey: apiKey ? '***' : 'missing',
+    apiVersion
+  });
 
-    const prompt = `
-      Analyze this standup update and extract the following information:
-      1. What was done yesterday
-      2. What will be done today
-      3. Any blockers or challenges
-      4. Key topics or keywords mentioned
-
-      Transcript: ${transcript}
-
-      Format the response as JSON with the following structure:
-      {
-        "yesterday": ["item1", "item2"],
-        "today": ["item1", "item2"],
-        "blockers": ["item1", "item2"],
-        "keywords": [{"text": "keyword1", "value": 8}, {"text": "keyword2", "value": 5}]
-      }
-    `;
-
-    const response = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "You are a helpful assistant that analyzes daily standup updates and extracts key information."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ]
-    });
-
-    const result = JSON.parse(response.data.choices[0].message?.content || "{}");
-    
-    return {
-      yesterday: result.yesterday || [],
-      today: result.today || [],
-      blockers: result.blockers || [],
-      keywords: result.keywords || []
-    };
-  } catch (error) {
-    console.error("Error analyzing transcript:", error);
-    throw error;
+  if (!apiKey) {
+    throw new Error('Azure OpenAI API key is required');
   }
-}
+
+  client = new AzureOpenAI({
+    apiKey,
+    baseURL: endpoint,
+    defaultQuery: { 'api-version': apiVersion },
+    defaultHeaders: { 'api-key': apiKey }
+  });
+};
+
+export const analyzeStandupTranscript = async (
+  transcript: string,
+  deployment: string
+): Promise<string> => {
+  if (!client) {
+    throw new Error("OpenAI client not initialized");
+  }
+
+  console.log('Analyzing transcript with deployment:', deployment);
+
+  const response = await client.chat.completions.create({
+    model: deployment,
+    messages: [
+      {
+        role: "system",
+        content: `You are an AI assistant specialized in analyzing standup meeting transcripts. Your role is to:\n\n1. Extract Key Information:\n   - Identify action items and their assignees\n   - Note blockers and dependencies\n   - Track progress on ongoing tasks\n   - Highlight any decisions made\n\n2. Structure Your Analysis:\n   - Start with a brief summary\n   - List action items with assignees\n   - Note blockers that need attention\n   - Include any decisions or important discussions\n\n3. Format Guidelines:\n   - Use clear headings and bullet points\n   - Keep the analysis concise but comprehensive\n   - Highlight urgent items\n   - Maintain a professional tone\n\n4. Special Instructions:\n   - If someone mentions being blocked, ensure it's clearly highlighted\n   - If deadlines are mentioned, include them in the relevant sections\n   - If there are dependencies between tasks, note these relationships\n   - If someone needs help or resources, make this visible\n\nRemember to maintain objectivity and focus on actionable insights.`
+      },
+      {
+        role: "user",
+        content: `Please analyze this standup meeting transcript:\n\n${transcript}`
+      }
+    ]
+  });
+
+  return response.choices[0]?.message?.content || "No analysis generated";
+};

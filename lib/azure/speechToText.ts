@@ -3,7 +3,7 @@ import { SpeechConfig, AudioConfig, SpeechRecognizer } from 'microsoft-cognitive
 export async function initializeSpeechService(apiKey: string, region: string) {
   const speechConfig = SpeechConfig.fromSubscription(apiKey, region);
   speechConfig.speechRecognitionLanguage = "en-US";
-  
+
   return {
     speechConfig,
     initialized: true
@@ -21,7 +21,7 @@ export async function startContinuousRecognition(
       process.env.NEXT_PUBLIC_AZURE_SPEECH_KEY!,
       process.env.NEXT_PUBLIC_AZURE_SPEECH_REGION!
     );
-    
+
     const audioConfig = AudioConfig.fromStreamInput(audioStream);
     const recognizer = new SpeechRecognizer(speechConfig, audioConfig);
 
@@ -49,6 +49,6 @@ export async function startContinuousRecognition(
     };
   } catch (error) {
     onError(error as Error);
-    return () => {};
+    return () => { };
   }
 }
