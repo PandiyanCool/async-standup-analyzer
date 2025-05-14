@@ -64,10 +64,10 @@ export default function SentimentAnalysis({
               Score: {sentiment.score.toFixed(2)}
             </span>
           </div>
-          <Progress
+          {/* <Progress
             value={((sentiment.score + 1) / 2) * 100}
             className={`h-2 ${getProgressColor()}`}
-          />
+          /> */}
         </div>
 
         {sentiment.highlights.positive.length > 0 && (
