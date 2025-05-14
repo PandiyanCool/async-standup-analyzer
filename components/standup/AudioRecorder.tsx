@@ -288,8 +288,7 @@ export default function AudioRecorder({
               <span>Max: {formatTime(120)}</span>
             </div>
             <Progress
-              value={Math.max(0, Math.min((recordingTime / 120) * 100, 100))}
-              max={100}
+              value={Math.min(Math.max(0, (recordingTime / 120) * 100), 100)}
               className="h-2"
             />
           </div>
