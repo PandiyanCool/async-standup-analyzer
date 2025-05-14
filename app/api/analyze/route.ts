@@ -28,8 +28,6 @@ const client = new AzureOpenAI({
 
 export async function POST(request: Request) {
     try {
-        // Log request headers for debugging
-        console.log('Request headers:', Object.fromEntries(request.headers.entries()));
 
         const { transcript } = await request.json();
 
@@ -40,13 +38,7 @@ export async function POST(request: Request) {
             );
         }
 
-        // Log the request details (excluding sensitive data)
-        console.log('Processing transcript analysis request:', {
-            transcriptLength: transcript.length,
-            deployment: process.env.AZURE_OPENAI_DEPLOYMENT,
-            endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-            apiVersion: process.env.AZURE_OPENAI_API_VERSION
-        });
+
 
         if (!process.env.AZURE_OPENAI_DEPLOYMENT) {
             throw new Error('AZURE_OPENAI_DEPLOYMENT is not configured');

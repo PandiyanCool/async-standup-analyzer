@@ -7,11 +7,6 @@ export const initializeOpenAIClient = (
   apiKey: string,
   apiVersion = "2024-02-15-preview"
 ): void => {
-  console.log('Initializing OpenAI client with:', {
-    endpoint,
-    apiKey: apiKey ? '***' : 'missing',
-    apiVersion
-  });
 
   if (!apiKey) {
     throw new Error('Azure OpenAI API key is required');
@@ -33,7 +28,6 @@ export const analyzeStandupTranscript = async (
     throw new Error("OpenAI client not initialized");
   }
 
-  console.log('Analyzing transcript with deployment:', deployment);
 
   const response = await client.chat.completions.create({
     model: deployment,
