@@ -1,4 +1,11 @@
-import StandupRecorder from "@/components/standup/StandupRecorder";
+import dynamic from "next/dynamic";
+
+const StandupRecorder = dynamic(
+  () => import("@/components/standup/StandupRecorder"),
+  {
+    ssr: false,
+  }
+);
 
 export default function Home() {
   return (
