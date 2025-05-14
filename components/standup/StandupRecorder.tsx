@@ -12,9 +12,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wand2Icon, RotateCcwIcon } from "lucide-react";
+import { Wand2Icon, RotateCcwIcon, MicIcon } from "lucide-react";
 import { StandupData } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import WordCloud from "./WordCloud";
 
 export default function StandupRecorder() {
   const [isRecording, setIsRecording] = useState(false);
@@ -116,46 +119,76 @@ export default function StandupRecorder() {
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Record Your Update</CardTitle>
-          <CardDescription>
-            Click the microphone to start recording your standup update. When
-            finished, click again to stop and analyze.
-          </CardDescription>
+    <div className="space-y-8">
+      <Card className="border-l-4 border-l-indigo-500 shadow-lg">
+        <CardHeader className="pb-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1.5">
+              <CardTitle className="text-2xl font-bold tracking-tight">
+                Record Your Update
+              </CardTitle>
+              <CardDescription className="text-base">
+                Click the microphone to start recording your standup update.
+                When finished, click again to stop and analyze.
+              </CardDescription>
+            </div>
+            {isRecording && (
+              <Badge
+                variant="destructive"
+                className="animate-pulse px-4 py-1.5 text-sm"
+              >
+                Recording...
+              </Badge>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center space-y-4">
-            <AudioRecorder
-              onTranscriptUpdate={handleTranscriptUpdate}
-              onRecordingStateChange={handleRecordingStateChange}
-              disabled={isAnalyzing}
-            />
+          <div className="flex flex-col items-center space-y-8">
+            <div className="relative w-full">
+              <AudioRecorder
+                onTranscriptUpdate={handleTranscriptUpdate}
+                onRecordingStateChange={handleRecordingStateChange}
+                disabled={isAnalyzing}
+              />
+            </div>
 
             {transcript && !isRecording && (
-              <div className="w-full mt-4">
-                <h3 className="font-medium mb-2">Transcript:</h3>
-                <div className="p-4 bg-muted rounded-md text-sm h-32 overflow-auto">
-                  {transcript}
+              <div className="w-full space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h3 className="font-semibold text-lg">Transcript</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Review your recorded update before analysis
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={resetRecording}
+                      disabled={isAnalyzing}
+                      className="gap-2"
+                    >
+                      <RotateCcwIcon className="h-4 w-4" />
+                      Reset
+                    </Button>
+                    <Button
+                      onClick={analyzeStandup}
+                      disabled={
+                        isAnalyzing || isRecording || !transcript.trim()
+                      }
+                      className="gap-2"
+                    >
+                      <Wand2Icon className="h-4 w-4" />
+                      {isAnalyzing ? "Analyzing..." : "Analyze"}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex justify-end gap-2 mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={resetRecording}
-                    disabled={isAnalyzing}
-                  >
-                    <RotateCcwIcon className="mr-2 h-4 w-4" />
-                    Reset
-                  </Button>
-                  <Button
-                    onClick={analyzeStandup}
-                    disabled={isAnalyzing || isRecording || !transcript.trim()}
-                  >
-                    <Wand2Icon className="mr-2 h-4 w-4" />
-                    {isAnalyzing ? "Analyzing..." : "Analyze"}
-                  </Button>
-                </div>
+                <ScrollArea className="h-40 rounded-lg border bg-muted/50 p-4">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {transcript}
+                  </p>
+                </ScrollArea>
               </div>
             )}
           </div>
@@ -164,33 +197,25 @@ export default function StandupRecorder() {
 
       {summary && (
         <Tabs defaultValue="summary" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="summary">Summary</TabsTrigger>
-            <TabsTrigger value="visualization">Word Cloud</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/50">
+            <TabsTrigger
+              value="summary"
+              className="data-[state=active]:bg-background"
+            >
+              Summary
+            </TabsTrigger>
+            <TabsTrigger
+              value="visualization"
+              className="data-[state=active]:bg-background"
+            >
+              Word Cloud
+            </TabsTrigger>
           </TabsList>
-          <TabsContent value="summary" className="mt-4">
+          <TabsContent value="summary" className="mt-6">
             <StandupSummary data={summary} />
           </TabsContent>
-          <TabsContent value="visualization" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Key Topics</CardTitle>
-                <CardDescription>
-                  Visualization of the most frequently mentioned topics in your
-                  standup.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex justify-center py-6">
-                <div className="word-cloud-placeholder h-64 w-full flex items-center justify-center">
-                  <p className="text-muted-foreground text-center">
-                    Word cloud visualization would appear here, showing key
-                    terms like:
-                    <br />
-                    {summary.keywords.map((k) => k.text).join(", ")}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="visualization" className="mt-6">
+            <WordCloud keywords={summary.keywords} />
           </TabsContent>
         </Tabs>
       )}
