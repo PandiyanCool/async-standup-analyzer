@@ -1,4 +1,5 @@
 import { AzureOpenAI } from "openai";
+import { StandupData } from "@/lib/types";
 
 let client: AzureOpenAI | null = null;
 
@@ -23,25 +24,64 @@ export const initializeOpenAIClient = (
 export const analyzeStandupTranscript = async (
   transcript: string,
   deployment: string
-): Promise<string> => {
+): Promise<StandupData> => {
   if (!client) {
     throw new Error("OpenAI client not initialized");
   }
-
 
   const response = await client.chat.completions.create({
     model: deployment,
     messages: [
       {
         role: "system",
-        content: `You are an AI assistant specialized in analyzing standup meeting transcripts. Your role is to:\n\n1. Extract Key Information:\n   - Identify action items and their assignees\n   - Note blockers and dependencies\n   - Track progress on ongoing tasks\n   - Highlight any decisions made\n\n2. Structure Your Analysis:\n   - Start with a brief summary\n   - List action items with assignees\n   - Note blockers that need attention\n   - Include any decisions or important discussions\n\n3. Format Guidelines:\n   - Use clear headings and bullet points\n   - Keep the analysis concise but comprehensive\n   - Highlight urgent items\n   - Maintain a professional tone\n\n4. Special Instructions:\n   - If someone mentions being blocked, ensure it's clearly highlighted\n   - If deadlines are mentioned, include them in the relevant sections\n   - If there are dependencies between tasks, note these relationships\n   - If someone needs help or resources, make this visible\n\nRemember to maintain objectivity and focus on actionable insights.`
+        content: `You are an AI assistant specialized in analyzing standup meeting transcripts. Your role is to extract key information and provide sentiment analysis. Return your analysis in the following JSON format:
+
+{
+  "yesterday": ["item1", "item2", ...],
+  "today": ["item1", "item2", ...],
+  "blockers": ["blocker1", "blocker2", ...],
+  "keywords": [
+    {"text": "keyword1", "value": 1},
+    {"text": "keyword2", "value": 2},
+    ...
+  ],
+  "sentiment": {
+    "overall": "positive" | "neutral" | "negative",
+    "score": number, // -1 to 1
+    "highlights": {
+      "positive": ["highlight1", "highlight2", ...],
+      "negative": ["concern1", "concern2", ...]
+    }
+  }
+}
+
+Guidelines:
+1. Extract completed tasks, planned tasks, and blockers
+2. Identify key topics and their frequency
+3. Analyze sentiment:
+   - Determine overall sentiment (positive/neutral/negative)
+   - Calculate sentiment score (-1 to 1)
+   - List positive highlights and concerns
+4. Keep items concise and actionable
+5. Ensure all arrays are properly populated, even if empty`
       },
       {
         role: "user",
         content: `Please analyze this standup meeting transcript:\n\n${transcript}`
       }
-    ]
+    ],
+    response_format: { type: "json_object" }
   });
 
-  return response.choices[0]?.message?.content || "No analysis generated";
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error("No analysis generated");
+  }
+
+  try {
+    return JSON.parse(content) as StandupData;
+  } catch (error) {
+    console.error("Failed to parse OpenAI response:", error);
+    throw new Error("Failed to parse analysis response");
+  }
 };

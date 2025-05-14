@@ -17,6 +17,7 @@ import { StandupData } from "@/lib/types";
 import { formatStandupForSlack } from "@/lib/slack";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import SentimentAnalysis from "./SentimentAnalysis";
 
 interface StandupSummaryProps {
   data: StandupData;
@@ -39,6 +40,28 @@ ${
   data.blockers.length > 0
     ? data.blockers.map((item) => `- ${item}`).join("\n")
     : "- No blockers"
+}
+${
+  data.sentiment
+    ? `
+🔹 Sentiment:
+Overall: ${data.sentiment.overall}
+Score: ${data.sentiment.score.toFixed(2)}
+${
+  data.sentiment.highlights.positive.length > 0
+    ? `\nPositive:\n${data.sentiment.highlights.positive
+        .map((h) => `- ${h}`)
+        .join("\n")}`
+    : ""
+}
+${
+  data.sentiment.highlights.negative.length > 0
+    ? `\nConcerns:\n${data.sentiment.highlights.negative
+        .map((h) => `- ${h}`)
+        .join("\n")}`
+    : ""
+}`
+    : ""
 }
     `.trim();
 
@@ -227,6 +250,8 @@ ${
           </div>
         </CardContent>
       </Card>
+
+      {data.sentiment && <SentimentAnalysis sentiment={data.sentiment} />}
     </div>
   );
 }
